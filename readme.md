@@ -51,8 +51,8 @@ protoc --version
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone git@github.com:yaseenahmed02/Nebula.git
+   cd nebula
    ```
 
 2. Navigate to the server directory and build the server:
