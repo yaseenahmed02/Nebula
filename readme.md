@@ -1,143 +1,122 @@
+# Nebula
 
-# Distributed Project
-
-This project consists of a simple client-server application built using Rust and the Tonic framework for gRPC communication. This guide will help you set up and run the server and client on your machine.
+This repository contains a distributed application built using Rust and gRPC (Tonic). Follow the instructions below to set up and run the server and client on your local machine.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before running the application, ensure you have the following installed:
 
-### 1. Install Rust and Cargo
+- **Rust**: The programming language used for this project.
+- **Protocol Buffers**: For serializing structured data.
 
-To install Rust and Cargo, you can use the following command in your terminal:
+### Installing Rust
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+To install Rust, follow these steps:
 
-This command will download and install Rust and Cargo. After installation, you need to configure your current shell session by running:
-
-```bash
-source $HOME/.cargo/env
-```
-
-### 2. Install Buf
-
-Buf is a tool for managing Protocol Buffers (protobuf) files. To install Buf, you can run the following command:
-
-```bash
-# For Linux and macOS
-brew install bufbuild/buf/buf
-
-# Or download the binary directly:
-curl -sSL https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64 -o /usr/local/bin/buf
-chmod +x /usr/local/bin/buf
-
-# For Windows, you can use Scoop
-scoop install buf
-```
-
-Make sure the installation was successful by checking the version:
-
-```bash
-buf --version
-```
-
-## Cloning the Repository
-
-To get started, clone this repository to your local machine:
-
-```bash
-git clone <repository-url>
-cd <repository-folder>
-```
-
-Replace `<repository-url>` with the actual URL of the repository and `<repository-folder>` with the folder name created after cloning.
-
-## Project Structure
-
-The project has two main components:
-
-- **Server**: This handles incoming requests and processes them.
-- **Client**: This sends requests to the server and receives responses.
-
-### Folder Structure
-
-```
-/distributed
-  ├── /client   # Client application code
-  └── /server   # Server application code
-```
-
-## Setting Up the Server
-
-1. **Navigate to the Server Directory:**
+1. Open your terminal.
+2. Run the following command to download and install Rust:
 
    ```bash
-   cd distributed/server
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 
-2. **Build the Server:**
-
-   Use Cargo to build the server application:
+3. After installation, ensure the `cargo` command is in your PATH. You can add it by running:
 
    ```bash
+   source $HOME/.cargo/env
+   ```
+
+4. Verify the installation by checking the version:
+
+   ```bash
+   rustc --version
+   ```
+
+### Installing Protocol Buffers
+
+To install Protocol Buffers on Ubuntu, use the following command:
+
+```bash
+sudo apt-get install protobuf-compiler
+```
+
+Verify the installation by checking the version:
+
+```bash
+protoc --version
+```
+
+## Setting Up the Project
+
+1. Clone the repository:
+
+   ```bash
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
+
+2. Navigate to the server directory and build the server:
+
+   ```bash
+   cd nebula/server
    cargo build
    ```
 
-3. **Run the Server:**
+3. Navigate to the client directory and build the client:
 
-   Start the server:
+   ```bash
+   cd ../client
+   cargo build
+   ```
+
+## Running the Application
+
+### Start the Server
+
+1. Open a terminal and navigate to the server directory:
+
+   ```bash
+   cd nebula/server
+   ```
+
+2. Run the server:
 
    ```bash
    cargo run
    ```
 
-   The server should output something like:
+### Start the Client
 
-   ```
-   Server listening on [::1]:50051
-   ```
-
-   If you see an error indicating the address is already in use, consider changing the port in `main.rs` to another number (e.g., `50052`) and rebuilding.
-
-## Setting Up the Client
-
-1. **Open a New Terminal:**
-
-   Leave the server running in its terminal and open a new terminal window for the client.
-
-2. **Navigate to the Client Directory:**
+1. Open another terminal and navigate to the client directory:
 
    ```bash
-   cd distributed/client
+   cd nebula/client
    ```
 
-3. **Build the Client:**
-
-   Use Cargo to build the client application:
-
-   ```bash
-   cargo build
-
-4. **Run the Client:**
-
-   Start the client:
+2. Run the client:
 
    ```bash
    cargo run
    ```
 
-   The client should output something like:
+### Expected Output
 
-   ```
-   Response: "HELLO, TONIC!"
-   ```
+When you run the client, you should see a response similar to:
+
+```
+Response: "HELLO, TONIC!"
+```
 
 ## Troubleshooting
 
-- **If You Encounter Errors:**
-  - Ensure Rust and Cargo are correctly installed.
-  - Check if the server is running before starting the client.
-  - Make sure the ports are not blocked by firewalls or used by other applications.
+- If you encounter issues with ports, ensure no other services are using the required ports. You can check active services with:
 
+  ```bash
+  sudo lsof -i :50051
+  ```
+
+- If Rust is not recognized as a command, ensure the installation directory is added to your PATH.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
