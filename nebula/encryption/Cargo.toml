@@ -8,8 +8,12 @@ image = "0.23.14"
 steganography = "*"
 rand = "0.8.5"
 
+# Define the encryption crate as a library
+[lib]
+name = "encryption"
+path = "src/lib.rs"
 
-
+# Define binaries for encode and decode
 [[bin]]
 name = "encode"
 path = "src/encode.rs"

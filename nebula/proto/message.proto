@@ -2,14 +2,17 @@ syntax = "proto3";
 
 package message;
 
+// Define the service with an RPC to handle image encryption
 service Messenger {
-  rpc SendMessage (MessageRequest) returns (MessageResponse);
+  rpc SendImage (ImageRequest) returns (ImageResponse);
 }
 
-message MessageRequest {
-  string content = 1;
+// Message to receive an image for encryption
+message ImageRequest {
+  bytes image_data = 1; // Image data sent from the client
 }
 
-message MessageResponse {
-  string reply = 1;
+// Message to send back the encrypted image
+message ImageResponse {
+  bytes encrypted_image = 1; // Encrypted image data sent to the client
 }
