@@ -1,0 +1,13 @@
+[package]
+name = "clientv2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.41.0", features = ["full"] }
+steganography = "1.0.2"
+image = "0.25.4"
+
+[[bin]]
+name = "client"
+path = "src/main.rs"

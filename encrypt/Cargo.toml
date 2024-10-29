@@ -1,0 +1,16 @@
+[package]
+name = "encrypt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+steganography = "1.0.2"
+image = "0.25.4"
+
+[lib]
+name = "encrypt"
+path = "src/lib.rs"
+
+[[bin]]
+name = "encode"
+path = "src/encode.rs"
