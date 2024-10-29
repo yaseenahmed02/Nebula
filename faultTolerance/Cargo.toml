@@ -1,0 +1,15 @@
+[package]
+name = "FaultTolernce"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+rand = "0.8"
+
+
+
+[[bin]]
+name = "faultTol"
+path = "src/faultTol.rs"
+
