@@ -53,6 +53,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let server_status_clone_lb = server_status_clone.clone();
             let current_leader_clone_lb = current_leader_clone.clone();
             let request_in_progress_clone_lb = request_in_progress_clone.clone();
+            let expected_seq_nums_clone_lb = expected_seq_nums_clone.clone();
             let server_id_clone_lb = server_id;
             thread::spawn(move || {
                 load_balancing_thread(
@@ -61,6 +62,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     server_id_clone_lb,
                     total_servers,
                     request_in_progress_clone_lb,
+                    expected_seq_nums_clone_lb,
                 );
             });
 
@@ -86,18 +88,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
                             "Server {} (Leader) is waiting for client requests...",
                             server_id
                         );
-                        handle_request(
+                        if let Err(e) = handle_request(
                             &socket,
                             server_id,
                             &request_in_progress_clone,
                             &expected_seq_nums_clone,
                         )
                         .await
-                        .unwrap();
+                        {
+                            eprintln!("Error in handle_request: {}", e);
+                        }
                     } else {
-                        respond_to_leader_query(&socket, &current_leader_clone)
-                            .await
-                            .unwrap();
+                        if let Err(e) =
+                            respond_to_leader_query(&socket, &current_leader_clone).await
+                        {
+                            eprintln!("Error in respond_to_leader_query: {}", e);
+                        }
                     }
                 } else {
                     println!("Server {} is down. Sleeping...", server_id);
@@ -134,7 +140,10 @@ async fn handle_request(
 
         if data == b"END" {
             // Should not happen here
-            println!("Unexpected END received before starting a request from {}", addr);
+            println!(
+                "Unexpected END received before starting a request from {}",
+                addr
+            );
             continue;
         }
 
@@ -161,47 +170,45 @@ async fn handle_request(
         // Begin processing the client request
         loop {
             // Process the packet
-            {
-                if data == b"END" {
-                    println!("End of transmission received from client {}", addr);
-                    break;
-                }
-
-                if len < 4 {
-                    println!("Received invalid packet.");
-                    // Receive the next packet
-                    let (len_new, addr_new) = socket.recv_from(&mut buf).await?;
-                    len = len_new;
-                    addr = addr_new;
-                    data = &buf[..len];
-                    continue;
-                }
-
-                let seq_num = u32::from_be_bytes([data[0], data[1], data[2], data[3]]);
-                let payload = &data[4..];
-
-                {
-                    let mut seq_nums = expected_seq_nums.lock().unwrap();
-                    let expected_seq_num = seq_nums.entry(client_key_ref.clone()).or_insert(0);
-
-                    if seq_num == *expected_seq_num {
-                        println!(
-                            "Leader {} received packet with sequence number: {}",
-                            server_id, seq_num
-                        );
-                        received_image_data.extend_from_slice(payload);
-                        *expected_seq_num += 1;
-                    } else {
-                        println!(
-                            "Out of order packet received from {}. Expected: {}, got: {}. Discarding.",
-                            client_key_ref, *expected_seq_num, seq_num
-                        );
-                    }
-                }
-
-                // Send ACK for the received packet regardless of whether it was expected
-                socket.send_to(&seq_num.to_be_bytes(), addr).await?;
+            if data == b"END" {
+                println!("End of transmission received from client {}", addr);
+                break;
             }
+
+            if len < 4 {
+                println!("Received invalid packet.");
+                // Receive the next packet
+                let (len_new, addr_new) = socket.recv_from(&mut buf).await?;
+                len = len_new;
+                addr = addr_new;
+                data = &buf[..len];
+                continue;
+            }
+
+            let seq_num = u32::from_be_bytes([data[0], data[1], data[2], data[3]]);
+            let payload = &data[4..];
+
+            {
+                let mut seq_nums = expected_seq_nums.lock().unwrap();
+                let expected_seq_num = seq_nums.entry(client_key_ref.clone()).or_insert(0);
+
+                if seq_num == *expected_seq_num {
+                    println!(
+                        "Leader {} received packet with sequence number: {}",
+                        server_id, seq_num
+                    );
+                    received_image_data.extend_from_slice(payload);
+                    *expected_seq_num += 1;
+                } else {
+                    println!(
+                        "Out of order packet received from {}. Expected: {}, got: {}. Discarding.",
+                        client_key_ref, *expected_seq_num, seq_num
+                    );
+                }
+            }
+
+            // Send ACK for the received packet regardless of whether it was expected
+            socket.send_to(&seq_num.to_be_bytes(), addr).await?;
 
             // Receive the next packet
             let (len_new, addr_new) = socket.recv_from(&mut buf).await?;
@@ -223,7 +230,7 @@ async fn handle_request(
         }
 
         println!("Received image data. Encrypting...");
-        let image_path = "/home/yaseen/Nebula/encrypt/encryption_img.jpg".to_string(); // Constant image path
+        let image_path = "../encrypt/encryption_img.jpg".to_string(); // Update this path as needed
         let encrypted_image_data = encrypt_image(received_image_data.clone(), &image_path);
         println!("Image data encrypted.");
 
@@ -242,16 +249,20 @@ async fn handle_request(
 
                 let mut ack_buf = [0; 4];
                 match timeout(Duration::from_secs(1), socket.recv_from(&mut ack_buf)).await {
-                    Ok(Ok((_, _))) => {
-                        let ack_seq_num = u32::from_be_bytes(ack_buf);
-                        if ack_seq_num == seq_num {
-                            println!("Received ACK for sequence number: {}", ack_seq_num);
-                            break;
+                    Ok(Ok((len_ack, _))) => {
+                        if len_ack == 4 {
+                            let ack_seq_num = u32::from_be_bytes(ack_buf);
+                            if ack_seq_num == seq_num {
+                                println!("Received ACK for sequence number: {}", ack_seq_num);
+                                break;
+                            } else {
+                                println!(
+                                    "Received out-of-sequence ACK: {} (expected {}). Ignoring.",
+                                    ack_seq_num, seq_num
+                                );
+                            }
                         } else {
-                            println!(
-                                "Received out-of-sequence ACK: {} (expected {}). Ignoring.",
-                                ack_seq_num, seq_num
-                            );
+                            println!("Received invalid ACK length.");
                         }
                     }
                     _ => {
@@ -272,9 +283,6 @@ async fn handle_request(
 
     Ok(())
 }
-
-// The rest of your server code remains the same...
-
 
 async fn middleware(server_status: ServerStatus, server_id: u32) {
     let mut status = server_status.lock().unwrap();
@@ -339,7 +347,6 @@ fn fault_tolerance_thread(
             let mut down_count = servers_down_count.lock().unwrap();
             *down_count -= 1;
             drop(down_count);
-
         } else {
             thread::sleep(Duration::from_secs(10)); // Increased sleep duration
         }
@@ -352,29 +359,42 @@ fn load_balancing_thread(
     server_id: u32,
     total_servers: u32,
     request_in_progress: RequestInProgress,
+    expected_seq_nums: ExpectedSeqNums,
 ) {
     loop {
         {
-            let mut leader = current_leader.lock().unwrap();
+            let is_leader = {
+                let leader = current_leader.lock().unwrap();
+                *leader == server_id
+            };
+
+            if !is_leader {
+                // Only the leader handles rotation
+                thread::sleep(Duration::from_secs(10));
+                continue;
+            }
+
             let request_flag = {
                 let flag_map = request_in_progress.lock().unwrap();
-                *flag_map.get(&*leader).unwrap_or(&false)
+                *flag_map.get(&server_id).unwrap_or(&false)
             };
 
             // Delay rotation if the current leader is handling a request
             if request_flag {
-                println!("Leader busy, delaying leader rotation...");
-                drop(leader);
+                println!("Leader is busy handling a request; delaying leader rotation.");
                 thread::sleep(Duration::from_secs(5));
                 continue;
             }
+
+            // Proceed to rotate the leader
+            let mut leader = current_leader.lock().unwrap();
 
             // Find the next available server
             let status = server_status.lock().unwrap();
             let mut next_leader = *leader;
             for _ in 0..total_servers {
                 next_leader = (next_leader % total_servers) + 1;
-                if *status.get(&next_leader).unwrap_or(&false) {
+                if *status.get(&next_leader).unwrap_or(&false) && next_leader != *leader {
                     break;
                 }
             }
@@ -387,7 +407,11 @@ fn load_balancing_thread(
                 );
             } else {
                 *leader = next_leader;
-                println!("Server {} set new leader to: {}", server_id, *leader);
+                println!("Leader rotated to server {}", *leader);
+
+                // Clear expected_seq_nums when leader changes
+                let mut seq_nums = expected_seq_nums.lock().unwrap();
+                seq_nums.clear();
             }
         }
 
@@ -413,7 +437,13 @@ async fn respond_to_leader_query(
         socket.send_to(response.as_bytes(), addr).await?;
         println!("Server responded to leader query from {}", addr);
     } else {
-        println!("Non-leader server received unexpected data from {}", addr);
+        // Send leader information in response to unexpected data
+        let response = format!("NOT_LEADER {}", leader_addr);
+        socket.send_to(response.as_bytes(), addr).await?;
+        println!(
+            "Non-leader server informed client {} about the current leader",
+            addr
+        );
     }
 
     Ok(())

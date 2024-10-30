@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Bind to an ephemeral local address
     let socket = UdpSocket::bind("127.0.0.1:0").await?;
-    let image_path = Path::new("/home/yaseen/Nebula/client/client.jpg");
+    let image_path = Path::new("client.jpg"); // Update this path to your image
 
     loop {
         // Prepare image data for sending
@@ -77,25 +77,50 @@ async fn main() -> Result<(), Box<dyn Error>> {
             packet[4..].copy_from_slice(chunk);
 
             let mut retry_count = 0;
-            const MAX_RETRIES: u32 = 5;
+            const MAX_RETRIES: u32 = 3; // Reduced from 5
 
             loop {
                 if let Err(e) = socket.send_to(&packet, &leader_addr).await {
-                    eprintln!("Error sending packet {} to leader {}: {}", seq_num, leader_addr, e);
+                    eprintln!(
+                        "Error sending packet {} to leader {}: {}",
+                        seq_num, leader_addr, e
+                    );
                 } else {
                     println!("Sent packet {} to leader {}", seq_num, leader_addr);
                 }
 
                 // Wait for an ACK from the leader
-                let mut ack_buf = [0; 4];
+                let mut ack_buf = [0; 1024];
                 match timeout(Duration::from_secs(2), socket.recv_from(&mut ack_buf)).await {
-                    Ok(Ok((_, addr))) => {
-                        let ack_seq_num = u32::from_be_bytes(ack_buf);
-                        if ack_seq_num == seq_num {
-                            println!("Received ACK for sequence {} from leader {}", ack_seq_num, addr);
-                            break;
+                    Ok(Ok((len, addr))) => {
+                        let response = String::from_utf8_lossy(&ack_buf[..len]);
+                        if response.starts_with("NOT_LEADER") {
+                            // Update leader address
+                            let new_leader_addr = response
+                                .trim_start_matches("NOT_LEADER ")
+                                .trim()
+                                .to_string();
+                            println!("Received NOT_LEADER response. New leader is {}", new_leader_addr);
+                            leader_addr = new_leader_addr;
+                            retry_count = 0;
+                            continue; // Retry sending the packet to the new leader
+                        } else if len == 4 {
+                            let ack_seq_num =
+                                u32::from_be_bytes(ack_buf[..4].try_into().unwrap());
+                            if ack_seq_num == seq_num {
+                                println!(
+                                    "Received ACK for sequence {} from leader {}",
+                                    ack_seq_num, addr
+                                );
+                                break;
+                            } else {
+                                println!(
+                                    "Received out-of-sequence ACK for {} from {}",
+                                    ack_seq_num, addr
+                                );
+                            }
                         } else {
-                            println!("Received out-of-sequence ACK for {} from {}", ack_seq_num, addr);
+                            println!("Received invalid ACK length {} from {}", len, addr);
                         }
                     }
                     _ => {
@@ -128,6 +153,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         // Receive the encrypted image data back from the leader server
         let mut received_image_data = Vec::new();
         let mut buf = [0; 1024];
+        let mut expected_seq_num: u32 = 0;
 
         loop {
             let (len, addr) = socket.recv_from(&mut buf).await?;
@@ -141,15 +167,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 eprintln!("Received invalid packet from server {}", addr);
                 continue;
             }
-            let seq_num = u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]);
+            let seq_num_received = u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]);
             let payload = &buf[4..len];
-            println!("Received packet {} from server {}", seq_num, addr);
 
-            received_image_data.extend_from_slice(payload);
+            if seq_num_received == expected_seq_num {
+                println!("Received packet {} from server {}", seq_num_received, addr);
+                received_image_data.extend_from_slice(payload);
+                expected_seq_num += 1;
+            } else {
+                println!(
+                    "Out of order packet received. Expected {}, got {}. Discarding.",
+                    expected_seq_num, seq_num_received
+                );
+                continue;
+            }
 
             // Send ACK for the received packet
-            if let Err(e) = socket.send_to(&seq_num.to_be_bytes(), addr).await {
-                eprintln!("Error sending ACK for packet {}: {}", seq_num, e);
+            if let Err(e) = socket.send_to(&seq_num_received.to_be_bytes(), addr).await {
+                eprintln!("Error sending ACK for packet {}: {}", seq_num_received, e);
             }
         }
 
