@@ -1,0 +1,59 @@
+### Phase 1: Initial Setup and Basic Communication
+- **Project Structure:** We began by creating separate client and server directories in a structured GitHub repository to facilitate modular development and organized collaboration.
+- **Dependency Setup:** The `Cargo.toml` files for both client and server were configured to include necessary dependencies like Tonic for gRPC, Protocol Buffers, and steganography for message encoding.
+- **Initial Communication with gRPC (Tonic):** Our initial choice of gRPC (using Tonic) allowed us to quickly set up reliable, request-response communication between client and server, well-suited for initial prototyping and straightforward, synchronous operations.
+- **Protocol Buffers for Structured Data Transfer:** Defined `.proto` files enabled precise message structure and efficient data transfer, aligning with gRPC’s strengths for defined service endpoints.
+- **Image Transmission and Steganography:** We successfully embedded hidden messages in images using steganography on the server side, then decoded these messages on the client side, verifying seamless data handling from sending unencrypted images to receiving processed images.
+- **Testing and Verification:** Completed the end-to-end process, including encoding and decoding, to confirm basic communication, image alteration, and message integrity through gRPC.
+
+### Phase 1b: Shift from gRPC (Tonic) to UDP
+- **Switch to UDP with Tokio:** As the project evolved, we moved from gRPC with Tonic to UDP, prioritizing lightweight, connectionless communication. UDP offered several benefits, including lower latency and reduced overhead, which became crucial as we introduced multi-server support with leader election.
+- **Engineering Rationale for UDP:** Unlike gRPC’s stream management, UDP allows clients to broadcast queries without maintaining a persistent connection, aligning with our leader election model. The connectionless nature of UDP suits the high availability and leader-fallback requirements of distributed systems, allowing each client to dynamically interact with servers.
+
+
+
+### Client-Side Enhancements
+- **Leader Discovery Mechanism:** Implemented a query-based leader discovery where clients broadcast "LEADER" queries to all servers and receive a response with the leader's address. This allows clients to identify and connect to the current leader dynamically.
+- **Automatic Leader Adjustment:** Clients can adapt to leader changes without interrupting ongoing transmissions. If a client receives a "NOT_LEADER" response or encounters retries due to unavailability, it rediscover the leader and updates its target.
+- **Enhanced Resilience and Error Handling:** Added retry mechanisms to handle network errors, timeouts, and leader changes, increasing client robustness.
+- **Concurrency Support:** Enabled multiple clients to interact independently with the server pool, each dynamically discovering the leader, ensuring concurrency and uninterrupted client operations.
+
+### Server-Side Enhancements
+- **Multi-Server Deployment with Leader Election:** Established a pool of three servers, with one active leader at any time. The leader handles client requests, while non-leader servers respond to queries with the leader’s address.
+- **Controlled Leader Rotation:** Adjusted leader rotation to occur only during idle periods, preventing interruptions during active request handling. This controlled rotation minimizes leader switching frequency, enhancing stability.
+- **Fault Tolerance Simulation:** Introduced failure simulation to test system resilience. Servers can simulate downtime, prompting other servers to re-elect the leader, ensuring continuous availability.
+- **Asynchronous Handling and Concurrency:** Leveraged asynchronous programming to handle multiple clients simultaneously, with independent state (sequence numbers) managed per client based on their address.
+- **Thread-Safe Synchronization:** Used mutexes with shared `Arc` references to protect shared resources across threads, avoiding race conditions and maintaining data integrity.
+- **Optimized Sequence Management:** Enhanced sequence number management for clients to prevent data conflicts, ensuring state consistency when leader transitions occur.
+- **Improved Non-Leader Responses:** Non-leader servers now respond to "LEADER" queries with the leader’s address. They also notify clients if unexpected data is received, ensuring clear client-server interaction paths.
+- **Detailed Logging and Monitoring:** Added comprehensive logs for key activities like leader rotation, client interactions, and server statuses to support monitoring, debugging, and system transparency.
+
+### Engineering Decisions and Architectural Overview
+
+In designing this distributed system, we made strategic engineering choices to balance performance, reliability, and fault tolerance. These decisions were guided by the need to handle concurrent client requests across multiple servers while maintaining a clear leader-based structure for coordination.
+
+#### 1. **Transition to UDP for Connectionless, Lightweight Communication**
+   - **Rationale:** UDP was selected for its low-latency, connectionless properties, allowing clients to interact dynamically with the server cluster without maintaining persistent connections. This approach aligned well with our leader election model, where clients query for the current leader and switch as needed without overhead.
+   - **Distributed Systems Benefit:** UDP simplifies broadcast-style messages, such as leader discovery, which gRPC streams do not handle efficiently in high-availability, leader-fallback scenarios. This connectionless model supports decentralized client interaction, crucial for leader election and load distribution.
+
+#### 2. **Leader-Based Request Coordination with Dynamic Discovery**
+   - **Leader Election Mechanism:** In a multi-server environment, consistency is maintained by designating one server as the leader responsible for handling client requests. Non-leader servers direct clients to the leader, ensuring a single point of command that minimizes conflicts during data handling and processing.
+   - **Engineering Rationale:** By implementing a “leader discovery” mechanism, clients can independently locate the active leader, enabling flexible, fault-tolerant connections that adjust as server roles change. This strategy is common in systems requiring high availability, where clients must discover and route to the primary node efficiently.
+   - **Request Handling:** Once connected to the leader, clients transfer data in sequential chunks, a design that maximizes throughput while avoiding overloading any single server. The leader handles requests until completion or until it becomes unavailable, at which point another server takes over.
+
+#### 3. **Controlled Leader Rotation and Load Balancing**
+   - **Leader Rotation Protocol:** Leader rotation occurs only during idle periods, preventing mid-process disruptions. This rotation is managed through a token-passing mechanism, where a “leader token” circulates between servers, checking availability and request load before transfer.
+   - **Load Balancing Decision:** By implementing controlled rotation, we reduce unnecessary leader shifts while ensuring even load distribution across the cluster. This approach, inspired by ring-based leader election algorithms, ensures that all servers share leadership duties without frequent transitions.
+   - **Engineering Trade-Off:** While leader rotation could theoretically improve load balancing further by rotating frequently, a more stable approach was chosen to avoid the latency spikes and instability that rapid rotation might introduce.
+
+#### 4. **Resilience through Fault Tolerance and Server Recovery**
+   - **Simulated Fault Tolerance:** We introduced server failures to validate the system’s resilience. This testing allowed us to ensure that leader transitions occur smoothly and that each server can recover without impacting ongoing client requests. This fault tolerance is engineered to handle unexpected downtimes gracefully, with remaining servers re-electing a leader.
+   - **State Management for Client Sessions:** Each server manages client-specific sequence numbers and data state, ensuring uninterrupted data flow even as leadership transitions occur. This aspect leverages `Arc` and `Mutex` locks for safe, concurrent data access, preventing race conditions across multiple clients and protecting against data corruption.
+
+#### 5. **Concurrency and Asynchronous Request Management**
+   - **Asynchronous Operations with Tokio:** Using asynchronous Rust with Tokio allowed each server to handle multiple clients concurrently, making it a highly performant, event-driven system. This choice of async programming models the architectural needs of distributed systems by enabling high throughput without blocking resources.
+   - **Client Independence:** Each client independently queries and adjusts to leader shifts, enabling the system to support multiple client-server sessions without interference or bottlenecks. Asynchronous operations further enhance this by allowing request processing, leader discovery, and fault handling to proceed independently of each other.
+
+---
+
+This architecture leverages a combination of leader election, UDP-based communication, and asynchronous programming to create a resilient, fault-tolerant system capable of handling concurrent requests across distributed nodes. The engineering decisions reflect best practices in distributed systems, balancing the need for responsiveness, data integrity, and robust failover handling.
