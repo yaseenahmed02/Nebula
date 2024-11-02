@@ -7,3 +7,6 @@ edition = "2021"
 tokio = { version = "1.0", features = ["full"] }
 rand = "0.8"
 sysinfo = "0.32"
+steganography = "1.0.2"
+image = "0.25.4"
+encrypt = { path = "../encrypt"}
