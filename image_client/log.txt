@@ -1,0 +1,260 @@
+Thread 0 initialized and waiting for work
+Thread 1 initialized and waiting for work
+Thread 2 initialized and waiting for work
+
+=== All threads initialized ===
+=== Starting image submissions ===
+
+
+=== Submitting image 1 ===
+Assigned image image1 to thread 0
+Successfully queued image 1
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image1")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+
+Thread 0 starting to process image image1
+Processing image: image1
+Received initial acknowledgment for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Segment 1 acknowledged for image: image1
+Completed processing image: image1
+Thread 0 now available
+
+=== Submitting image 2 ===
+
+Thread 0 starting to process image image2
+Processing image: image2
+Assigned image image2 to thread 0
+Successfully queued image 2
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image2")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+Received initial acknowledgment for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Segment 1 acknowledged for image: image2
+Completed processing image: image2
+Thread 0 now available
+
+=== Submitting image 3 ===
+
+Thread 0 starting to process image image3
+Processing image: image3
+Received initial acknowledgment for image: image3
+Segment 1 acknowledged for image: image3
+Assigned image image3 to thread 0
+Successfully queued image 3
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image3")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Segment 1 acknowledged for image: image3
+Completed processing image: image3
+Thread 0 now available
+
+=== Submitting image 4 ===
+
+Thread 0 starting to process image image4
+Processing image: image4
+Received initial acknowledgment for image: image4
+Assigned image image4 to thread 0
+Successfully queued image 4
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image4")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Segment 1 acknowledged for image: image4
+Completed processing image: image4
+Thread 0 now available
+
+=== Submitting image 5 ===
+
+Thread 0 starting to process image image5
+Processing image: image5
+Assigned image image5 to thread 0
+Successfully queued image 5
+Received initial acknowledgment for image: image5
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image5")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Segment 1 acknowledged for image: image5
+Completed processing image: image5
+Thread 0 now available
+
+=== Submitting image 6 ===
+Assigned image image6 to thread 0
+
+Thread 0 starting to process image image6
+Successfully queued image 6
+
+Current Thread States:
+Processing image: image6
+Thread 0: busy=true, processing=Some("image6")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+Received initial acknowledgment for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Segment 1 acknowledged for image: image6
+Completed processing image: image6
+Thread 0 now available
+
+=== Submitting image 7 ===
+
+Thread 0 starting to process image image7
+Processing image: image7
+Assigned image image7 to thread 0
+Successfully queued image 7
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image7")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+Received initial acknowledgment for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Segment 1 acknowledged for image: image7
+Completed processing image: image7
+Thread 0 now available
+
+=== Submitting image 8 ===
+Assigned image image8 to thread 0
+Successfully queued image 8
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image8")
+Thread 1: busy=false, processing=None
+Thread 2: busy=false, processing=None
+
+Thread 0 starting to process image image8
+Processing image: image8
+Received initial acknowledgment for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+Segment 1 acknowledged for image: image8
+
+=== Submitting image 9 ===
+Segment 1 acknowledged for image: image8
+Completed processing image: image8
+Thread 0 now available
+
+Thread 1 starting to process image image9
+Processing image: image9
+Assigned image image9 to thread 1
+Successfully queued image 9
+
+Current Thread States:
+Thread 0: busy=false, processing=None
+Thread 1: busy=true, processing=Some("image9")
+Thread 2: busy=false, processing=None
+Received initial acknowledgment for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+
+=== Submitting image 10 ===
+
+Thread 0 starting to process image image10
+Assigned image image10 to thread 0
+Processing image: image10
+Successfully queued image 10
+
+Current Thread States:
+Thread 0: busy=true, processing=Some("image10")
+Thread 1: busy=true, processing=Some("image9")
+Thread 2: busy=false, processing=None
+Unexpected response type for image: image10
+Thread 0 now available
+Segment -1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Segment 1 acknowledged for image: image9
+Completed processing image: image9
+Thread 1 now available
+
+=== All images submitted, monitoring processing ===
+
+
+=== All images processed successfully ===

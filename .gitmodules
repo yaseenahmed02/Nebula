@@ -1,0 +1,7 @@
+[submodule "image_client"]
+    path = image_client
+    url = git@github.com:username/image_client.git
+
+[submodule "image_server"]
+    path = image_server
+    url = git@github.com:username/image_server.git
