@@ -51,7 +51,7 @@ struct Message {
     msgtype: MessageType,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct ImageID {
     ip_address: String,
     port_number: String,
@@ -241,18 +241,25 @@ async fn main() {
         let mut buf = vec![0; 1024];
         loop {
             // Receive data
-            let (len, src) = socket.recv_from(&mut buf).await.unwrap();
-            let data = String::from_utf8_lossy(&buf[..len]).to_string();
-            let parts: Vec<&str> = data.split(':').collect();
-            let image_id = ImageID {
-                ip_address: parts[0].to_string(),
-                port_number: parts[1].to_string(),
-                unique_identifier: parts[2].to_string(),
+            let (len, _src) = match socket.recv_from(&mut buf).await {
+                Ok((len, src)) => (len, src),
+                Err(e) => {
+                    eprintln!("Error receiving data: {}", e);
+                    continue;
+                }
             };
-            //println!("Received request from {}: {}", src, image_id);
-
-            // Handle the request
-            handle_initial_request(image_id).await;
+             // Get just the received bytes
+            let received_data = &buf[..len];
+            match bincode::deserialize::<ImageID>(received_data) {
+                Ok(image_id) => {
+                    println!("Received ImageID: {:?}", image_id);
+                    handle_initial_request(image_id).await;
+                }
+                Err(e) => {
+                    eprintln!("Failed to deserialize ImageID: {}", e);
+                    continue;
+                }
+            }
         }
     });
 
